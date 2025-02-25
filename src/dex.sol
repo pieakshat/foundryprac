@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IERC20 {
-    function transfer(address to, uint256 amount) external returns (bool);
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-    function approve(address spender, uint256 amount) external returns (bool);
-}
+// interface IERC20 {
+//     function transfer(address to, uint256 amount) external returns (bool);
+//     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+//     function balanceOf(address account) external view returns (uint256);
+//     function approve(address spender, uint256 amount) external returns (bool);
+// }
 
 contract Dex {
 
         bool private locked;
         uint256 constant PRECISION = 1e18; 
-        uint256 constant MIN_LIQUIDITY = 10; 
+        uint256 constant MIN_LIQUIDITY = 1 ether; 
         uint256 constant FEE_DENOMINATOR = 500;
 
 

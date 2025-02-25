@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "forge-std/Test.sol";
 import "../src/dex.sol";
 import "../src/token.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TestDex is Test {
     Dex dex; 
@@ -17,10 +18,12 @@ contract TestDex is Test {
         token1 = new TT(); 
         token2 = new TT(); 
 
-        token1.mint(deployer, 1000 ether); 
-        token2.mint(deployer, 1000 ether); 
-        token1.mint(user1, 1000 ether); 
-        token2.mint(user1, 1000 ether); 
+        vm.prank(deployer);
+        token1.mintTokens(); 
+        token2.mintTokens(); 
+        vm.prank(user1);
+        token1.mintTokens(); 
+        token2.mintTokens(); 
 
     }
 
@@ -55,7 +58,43 @@ contract TestDex is Test {
     }
 
     function testTokenToEthSwap() public {
-        
-    }
+        // create the pool first
+        token1.approve(address(dex), 1000 ether); 
+
+        vm.deal(deployer, 10 ether); 
+        dex.createPool{value: 10 ether}(IERC20(address(token1)), 1000 ether); 
+
+        token1.transfer(user1, 100 ether); 
+
+        // approve token transfer 
+        vm.startPrank(user1);
+        token1.approve(address(dex), 10 ether); 
+        dex.tokenToEthSwap(IERC20(address(token1)), 10 ether, 0); 
+        vm.stopPrank(); 
+    }   
+
+function testTokenToTokenSwap() public {
+    token1.approve(address(dex), 1000 ether);
+    token2.approve(address(dex), 1000 ether);
+    vm.deal(deployer, 20 ether);
+
+    dex.createPool{value: 10 ether}(IERC20(address(token1)), 1000 ether);
+    dex.createPool{value: 10 ether}(IERC20(address(token2)), 1000 ether);
+
+    // Give user1 some tokens to swap
+    token1.transfer(user1, 100 ether);  
+    token2.transfer(user1, 100 ether);  
+
+    // Approve and swap token1 for token2
+    vm.startPrank(user1);
+    token1.approve(address(dex), 10 ether);
+    dex.tokenToTokenSwap(IERC20(address(token1)), IERC20(address(token2)), 10 ether, 0);
+    vm.stopPrank();
+
+    // Verify user received token2
+    uint256 userToken2Balance = token2.balanceOf(user1);
+    assertGt(userToken2Balance, 0);
+}
+
 
 }
